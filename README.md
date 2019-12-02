@@ -4,3 +4,5 @@
 ##### To install dependencies: `pip install -r requirements.txt`
 
 В папке с каждым занятием хранится README.md описывающий все файлы занятия.
+
+Домашнее задание скидывать мне в телеграм @technogleb с указанием фио и номера домашки
