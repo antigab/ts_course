@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import timedelta
+from monthdelta import monthdelta
 from copy import deepcopy
 
 from sklearn.linear_model import LinearRegression
@@ -46,7 +47,14 @@ class TimeSeriesPredictor:
             Pandas dataframe, which contains feature lags of
             shape(1, num_lags)
         """
-        delta = timedelta(hours=1) if self.granularity == 'hour' else timedelta(days=1)
+        if not self.granularity:
+            raise ValueError('No granularity provided')
+        if self.granularity == 'hour':
+            delta = timedelta(hours=1)
+        if self.granularity == 'day':
+            delta = timedelta(days=1)
+        if self.granularity == 'month':
+            delta = monthdelta(1)
         next_timestamp = pd.to_datetime(ts.index[-1]) + delta
         lag_dict = {'lag_{}'.format(i): [ts[-i]] for i in range(1, self.num_lags + 1)}
         lag_dict.update({'season_lag': ts[-self.num_lags]})
