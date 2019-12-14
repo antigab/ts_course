@@ -56,8 +56,8 @@ class TimeSeriesPredictor:
         if self.granularity == 'month':
             delta = monthdelta(1)
         next_timestamp = pd.to_datetime(ts.index[-1]) + delta
-        lag_dict = {'lag_{}'.format(i): [ts[-i]] for i in range(1, self.num_lags + 1)}
-        lag_dict.update({'season_lag': ts[-self.num_lags]})
+        lag_dict = {'lag_{}'.format(i): [ts.iloc[-i]] for i in range(1, self.num_lags + 1)}
+        lag_dict.update({'season_lag': ts.iloc[-self.num_lags]})
         df = pd.DataFrame.from_dict(lag_dict)
         df.index = [next_timestamp]
         return df
