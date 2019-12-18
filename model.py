@@ -1,12 +1,14 @@
 import pandas as pd
+import numpy as np
 from datetime import timedelta
 from monthdelta import monthdelta
 from copy import deepcopy
 
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
-
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.metrics import mean_squared_error, r2_score
 
 from transformations import TimeSeriesTransformer, FeatureGenerator
 
@@ -66,8 +68,8 @@ class TimeSeriesPredictor:
         lag_matrix = self.transform(ts)
         feature_matrix = self.enrich(lag_matrix)
         X, y = feature_matrix.drop('y', axis=1), feature_matrix['y']
-        model = LinearRegression(**kwargs)
-        # model = GradientBoostingRegressor()
+        model = Ridge(**kwargs)
+        model = GradientBoostingRegressor(**kwargs)
         model.fit(X, y)
         self.model = model
 
@@ -111,3 +113,16 @@ class TimeSeriesPredictor:
     def get_prediction_intervals(self, y_pred):
         lower, upper = y_pred - self.sigma * self.std, y_pred + self.sigma * self.std
         return lower, upper
+
+    def fit_params(self, ts, params, n_splits=4):
+        splitter = TimeSeriesSplit(n_splits=n_splits)
+        batch_generator = splitter.split(ts)
+        scores = []
+        for train_idxs, test_idxs in batch_generator:
+            ts_train = ts.iloc[train_idxs]
+            ts_test = ts.iloc[test_idxs]
+            self.fit(ts_train, **params)
+            ts_pred = self.predict_next(ts_train, k=len(ts_test))
+            score = mean_squared_error(ts_test, ts_pred)
+            scores.append(score)
+        return np.mean(scores)
